@@ -66,7 +66,8 @@ a{color:var(--teal);text-decoration:none}
 .btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 
 /* ============ LOGIN ============ */
-#view-login{min-height:100vh;display:flex}
+#view-login{min-height:100vh;display:none}
+#view-login.active{display:flex}
 .login-brand{flex:0 0 44%;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:56px 64px;position:relative;overflow:hidden}
 .login-brand::after{content:"";position:absolute;right:-180px;bottom:-180px;width:520px;height:520px;border-radius:50%;border:1px solid rgba(255,255,255,.10)}
 .login-brand::before{content:"";position:absolute;right:-80px;bottom:-80px;width:340px;height:340px;border-radius:50%;border:1px solid rgba(255,255,255,.14)}
