@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitrum Compounding Pharmacy — Prescriber Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0B1C2C;          /* deep slate */
+  --ink-soft:#3D5266;
+  --muted:#6B7E8F;
+  --mist:#F4F7F9;         /* app background */
+  --surface:#FFFFFF;
+  --line:#DFE7EC;
+  --line-soft:#EBF0F4;
+  --teal:#0E7C86;         /* primary */
+  --teal-deep:#0A525A;
+  --teal-tint:#E5F2F3;
+  --blue:#1E5FA8;
+  --s4:#1E6FB8; --s4-bg:#EAF2FB;
+  --s5:#946312; --s5-bg:#FBF3E1;
+  --s6:#A93237; --s6-bg:#FBEAEB;
+  --ok:#1B7A4A; --ok-bg:#E6F4EC;
+  --warn:#946312; --warn-bg:#FBF3E1;
+  --info:#1E5FA8; --info-bg:#EAF2FB;
+  --shadow-sm:0 1px 2px rgba(11,28,44,.06);
+  --shadow-md:0 4px 16px rgba(11,28,44,.08);
+  --shadow-lg:0 16px 48px rgba(11,28,44,.16);
+  --r:10px;
+  --display:'Sora',sans-serif;
+  --body:'Inter',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:var(--body);font-size:14px;color:var(--ink);background:var(--mist);-webkit-font-smoothing:antialiased}
+button{font-family:var(--body);cursor:pointer;border:none;background:none}
+input,select,textarea{font-family:var(--body);font-size:14px;color:var(--ink)}
+a{color:var(--teal);text-decoration:none}
+.mono{font-family:var(--mono)}
+.view{display:none}
+.view.active{display:block}
+
+/* ============ shared chips & badges ============ */
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 8px;border-radius:5px;line-height:1.4}
+.chip.s4{color:var(--s4);background:var(--s4-bg)}
+.chip.s5{color:var(--s5);background:var(--s5-bg)}
+.chip.s6{color:var(--s6);background:var(--s6-bg)}
+.status{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px}
+.status .dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.status.ok{color:var(--ok);background:var(--ok-bg)}
+.status.warn{color:var(--warn);background:var(--warn-bg)}
+.status.info{color:var(--info);background:var(--info-bg)}
+.status.neutral{color:var(--ink-soft);background:var(--line-soft)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font-weight:600;font-size:14px;border-radius:8px;padding:10px 18px;transition:background .15s,box-shadow .15s,transform .05s}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--teal);color:#fff}
+.btn-primary:hover{background:var(--teal-deep)}
+.btn-ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-quiet{color:var(--ink-soft)}
+.btn-quiet:hover{color:var(--teal)}
+.btn:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* ============ LOGIN ============ */
+#view-login{min-height:100vh;display:flex}
+.login-brand{flex:0 0 44%;background:var(--ink);color:#fff;display:flex;flex-direction:column;justify-content:space-between;padding:56px 64px;position:relative;overflow:hidden}
+.login-brand::after{content:"";position:absolute;right:-180px;bottom:-180px;width:520px;height:520px;border-radius:50%;border:1px solid rgba(255,255,255,.10)}
+.login-brand::before{content:"";position:absolute;right:-80px;bottom:-80px;width:340px;height:340px;border-radius:50%;border:1px solid rgba(255,255,255,.14)}
+.brandmark{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:.02em}
+.brandmark .glyph{width:36px;height:36px;border-radius:9px;background:var(--teal);display:flex;align-items:center;justify-content:center}
+.login-brand h1{font-family:var(--display);font-size:34px;line-height:1.25;font-weight:600;max-width:420px;margin-top:auto}
+.login-brand p.sub{margin-top:18px;color:#A9BCCB;line-height:1.65;max-width:400px}
+.licence-line{position:relative;z-index:1;margin-top:48px;font-family:var(--mono);font-size:11px;color:#7A93A6;letter-spacing:.05em;line-height:1.9}
+.login-pane{flex:1;display:flex;align-items:center;justify-content:center;padding:48px}
+.login-card{width:100%;max-width:420px}
+.login-card h2{font-family:var(--display);font-size:22px;font-weight:600}
+.login-card .lede{color:var(--muted);margin:8px 0 26px}
+.role-toggle{display:grid;grid-template-columns:1fr 1fr;background:var(--line-soft);border-radius:10px;padding:4px;margin-bottom:24px}
+.role-toggle button{padding:10px;border-radius:7px;font-weight:600;color:var(--muted);transition:all .15s}
+.role-toggle button.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow-sm)}
+.role-toggle button .role-sub{display:block;font-weight:400;font-size:11px;color:var(--muted);margin-top:2px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:6px}
+.field input,.field select,.field textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:var(--surface);transition:border-color .15s}
+.field input:hover,.field select:hover{border-color:#C4D2DB}
+.field .hint{font-size:11px;color:var(--muted);margin-top:5px}
+.login-foot{margin-top:24px;font-size:12px;color:var(--muted);text-align:center;line-height:1.7}
+
+/* ============ APP SHELL ============ */
+#app{display:none;min-height:100vh}
+#app.active{display:block}
+.topbar{position:fixed;top:0;left:0;right:0;height:60px;background:var(--surface);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:24px;padding:0 24px;z-index:50}
+.topbar .brandmark{color:var(--ink);font-size:15px}
+.topbar .brandmark .glyph{width:30px;height:30px;border-radius:8px}
+.topbar-spacer{flex:1}
+.icon-btn{position:relative;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--ink-soft)}
+.icon-btn:hover{background:var(--line-soft)}
+.icon-btn .badge-dot{position:absolute;top:8px;right:9px;width:8px;height:8px;border-radius:50%;background:var(--s6);border:2px solid var(--surface)}
+.userchip{display:flex;align-items:center;gap:10px;padding:6px 10px;border-radius:9px;border:1px solid var(--line)}
+.userchip:hover{border-color:var(--teal)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--teal-tint);color:var(--teal-deep);font-weight:600;font-size:12px;display:flex;align-items:center;justify-content:center}
+.userchip .u-name{font-weight:600;font-size:13px;line-height:1.2;text-align:left}
+.userchip .u-role{font-size:11px;color:var(--muted);text-align:left}
+.sidebar{position:fixed;top:60px;left:0;bottom:0;width:232px;background:var(--surface);border-right:1px solid var(--line);padding:18px 12px;display:flex;flex-direction:column}
+.nav-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);padding:8px 12px 6px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:11px;width:100%;padding:10px 12px;border-radius:8px;color:var(--ink-soft);font-weight:500;font-size:13.5px;margin-bottom:2px;text-align:left}
+.nav-item:hover{background:var(--mist);color:var(--ink)}
+.nav-item.active{background:var(--teal-tint);color:var(--teal-deep);font-weight:600}
+.nav-item svg{flex:0 0 18px}
+.sidebar-foot{margin-top:auto;padding:12px;border-top:1px solid var(--line-soft);font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.8;letter-spacing:.03em}
+.main{margin-left:232px;padding:84px 32px 48px;max-width:1280px}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
+.page-head h2{font-family:var(--display);font-size:24px;font-weight:600}
+.page-head .crumb{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.06em;margin-bottom:6px;text-transform:uppercase}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow-sm)}
+
+/* ============ DASHBOARD ============ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+.stat{padding:20px 22px;position:relative;overflow:hidden}
+.stat .s-label{font-size:12px;font-weight:600;color:var(--muted)}
+.stat .s-num{font-family:var(--display);font-size:34px;font-weight:600;margin:6px 0 4px}
+.stat .s-meta{font-size:12px;color:var(--muted)}
+.stat .s-meta b{color:var(--ok);font-weight:600}
+.stat .s-ico{position:absolute;top:18px;right:18px;width:36px;height:36px;border-radius:9px;background:var(--teal-tint);color:var(--teal-deep);display:flex;align-items:center;justify-content:center}
+.action-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+.action-card{padding:24px;display:flex;align-items:center;gap:20px}
+.action-card.primary{background:linear-gradient(135deg,var(--teal-deep),var(--teal));border:none;color:#fff}
+.action-card.primary .ac-sub{color:#C7E4E7}
+.action-card .ac-title{font-family:var(--display);font-size:17px;font-weight:600;margin-bottom:4px}
+.action-card .ac-sub{font-size:13px;color:var(--muted);line-height:1.55;max-width:380px}
+.action-card .btn{margin-left:auto;flex:0 0 auto}
+.action-card.primary .btn{background:#fff;color:var(--teal-deep)}
+.table-card{overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line-soft)}
+.table-head h3{font-family:var(--display);font-size:15px;font-weight:600}
+table{width:100%;border-collapse:collapse}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 20px;border-bottom:1px solid var(--line-soft);font-weight:500}
+td{padding:13px 20px;border-bottom:1px solid var(--line-soft);font-size:13.5px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr:hover{background:#FAFCFD}
+td .t-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+
+/* ============ CATALOG ============ */
+.catalog-layout{display:grid;grid-template-columns:230px 1fr;gap:20px;align-items:start}
+.filter-card{padding:18px}
+.filter-card h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:14px 0 10px;font-weight:500}
+.filter-card h4:first-child{margin-top:0}
+.f-opt{display:flex;align-items:center;gap:9px;padding:6px 2px;font-size:13px;color:var(--ink-soft);cursor:pointer}
+.f-opt input{accent-color:var(--teal)}
+.f-opt .count{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.searchbar{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:10px 14px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+.searchbar input{flex:1;border:none;outline:none;font-size:14px;background:none}
+.prod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.prod{padding:18px 20px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,border-color .15s}
+.prod:hover{box-shadow:var(--shadow-md);border-color:#C9D8E0}
+.prod .p-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.prod .p-name{font-family:var(--display);font-size:15px;font-weight:600;line-height:1.4}
+.prod .p-base{font-size:12.5px;color:var(--muted);line-height:1.5}
+.prod .p-base b{color:var(--ink-soft);font-weight:600}
+.prod .p-foot{display:flex;align-items:center;justify-content:space-between;margin-top:4px;padding-top:12px;border-top:1px dashed var(--line)}
+.prod .p-cat{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase}
+.prod .btn{padding:8px 14px;font-size:13px}
+
+/* ============ ORDER WIZARD ============ */
+.wizard{max-width:780px}
+.steps{display:flex;gap:0;margin-bottom:22px}
+.step{flex:1;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-weight:500;font-size:13px}
+.step:first-child{border-radius:10px 0 0 10px}
+.step:last-child{border-radius:0 10px 10px 0;border-left:none}
+.step .s-n{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;flex:0 0 24px}
+.step.on{color:var(--teal-deep);border-color:var(--teal);background:var(--teal-tint)}
+.step.on .s-n{border-color:var(--teal);background:var(--teal);color:#fff}
+.step.done{color:var(--ok)}
+.step.done .s-n{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.wizard .card{padding:26px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid .full{grid-column:1/-1}
+.wiz-foot{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--line-soft)}
+.dropzone{border:1.5px dashed #B9CBD6;border-radius:10px;padding:30px;text-align:center;color:var(--muted);background:#FAFCFD;transition:border-color .15s,background .15s;cursor:pointer}
+.dropzone:hover,.dropzone.over{border-color:var(--teal);background:var(--teal-tint)}
+.dropzone .dz-title{font-weight:600;color:var(--ink-soft);margin-top:10px}
+.dropzone .dz-sub{font-size:12px;margin-top:4px}
+.filepill{display:flex;align-items:center;gap:10px;background:var(--ok-bg);border:1px solid #BFE3CE;border-radius:8px;padding:9px 12px;margin-top:10px;font-size:13px;color:var(--ok);font-weight:500}
+.sig-box{border:1.5px solid var(--line);border-radius:10px;background:#FCFDFE;position:relative}
+.sig-box canvas{display:block;width:100%;height:140px;border-radius:10px;cursor:crosshair}
+.sig-box .sig-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#B9CBD6;font-size:13px;pointer-events:none}
+.sig-meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.routebox{background:var(--info-bg);border:1px solid #C5DAF2;border-radius:10px;padding:16px 18px}
+.routebox .rb-title{font-weight:600;color:var(--info);font-size:13.5px;display:flex;gap:8px;align-items:center}
+.routebox p{font-size:12.5px;color:#33567E;margin:6px 0 14px;line-height:1.55}
+.pay-note{margin-top:18px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:flex-start;line-height:1.6;background:var(--mist);border-radius:8px;padding:10px 14px}
+
+/* ============ RESOURCES ============ */
+.res-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.res{padding:24px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,border-color .15s}
+.res:hover{box-shadow:var(--shadow-md);border-color:#C9D8E0}
+.res .r-ico{width:42px;height:42px;border-radius:11px;background:var(--teal-tint);color:var(--teal-deep);display:flex;align-items:center;justify-content:center}
+.res h3{font-family:var(--display);font-size:16px;font-weight:600}
+.res p{font-size:13px;color:var(--muted);line-height:1.6}
+.res .r-items{list-style:none;margin-top:2px}
+.res .r-items li{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13px;color:var(--ink-soft);border-bottom:1px dashed var(--line-soft)}
+.res .r-items li:last-child{border-bottom:none}
+.res .r-items .tag{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--muted)}
+.res .btn{align-self:flex-start;margin-top:6px;padding:8px 14px;font-size:13px}
+
+.toast{position:fixed;bottom:28px;right:28px;background:var(--ink);color:#fff;padding:13px 18px;border-radius:10px;box-shadow:var(--shadow-lg);font-size:13.5px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:99}
+.toast.show{opacity:1;transform:none}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+@media (max-width:1080px){
+  .login-brand{display:none}
+  .sidebar{display:none}
+  .main{margin-left:0}
+  .stat-grid,.prod-grid,.res-grid,.form-grid,.action-grid{grid-template-columns:1fr}
+  .catalog-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1: LOGIN ================= -->
+<div class="view active" id="view-login">
+  <aside class="login-brand">
+    <div class="brandmark" style="position:relative;z-index:1">
+      <span class="glyph">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M5 8l7-5 7 5M7 21h10"/></svg>
+      </span>
+      VITRUM<span style="font-weight:400;color:#A9BCCB">&nbsp;Compounding</span>
+    </div>
+    <div style="position:relative;z-index:1">
+      <h1>Patient-specific compounds, prescribed with confidence.</h1>
+      <p class="sub">A secure prescriber portal for Schedule 4 to Schedule 6 made-to-order formulations. Built for South African clinical practice.</p>
+      <div class="licence-line">
+        SAHPRA LICENSED PHARMACY &middot; LIC NO. Y/22/0481<br>
+        SAPC REG. 2200-114-77 &middot; ISO 7 CLEANROOM FACILITY &middot; JOHANNESBURG
+      </div>
+    </div>
+  </aside>
+
+  <main class="login-pane">
+    <div class="login-card">
+      <h2>Sign in to the Prescriber Portal</h2>
+      <p class="lede">Access is restricted to verified prescribers and their authorised practice staff.</p>
+
+      <div class="role-toggle" role="tablist" aria-label="Login role">
+        <button id="roleDoctor" class="active" onclick="setRole('doctor')" role="tab" aria-selected="true">
+          Doctor Login
+          <span class="role-sub">HPCSA-registered prescriber</span>
+        </button>
+        <button id="roleStaff" onclick="setRole('staff')" role="tab" aria-selected="false">
+          Staff / Assistant Login
+          <span class="role-sub">Linked to a verified practice</span>
+        </button>
+      </div>
+
+      <div class="field" id="hpcsaField">
+        <label for="hpcsa">HPCSA Registration Number</label>
+        <input id="hpcsa" type="text" placeholder="MP 0712345" value="MP 0712345">
+        <div class="hint">Validated against the HPCSA register during onboarding.</div>
+      </div>
+      <div class="field" id="practiceField" style="display:none">
+        <label for="practice">Practice Code</label>
+        <input id="practice" type="text" placeholder="PRX-2284" value="PRX-2284">
+        <div class="hint">Issued to your practice by your linked prescriber.</div>
+      </div>
+      <div class="field">
+        <label for="email">Email Address</label>
+        <input id="email" type="email" value="a.jansen@morningside-med.co.za">
+      </div>
+      <div class="field">
+        <label for="pw">Password</label>
+        <input id="pw" type="password" value="••••••••••••">
+      </div>
+
+
+      <button class="btn btn-primary" style="width:100%" onclick="login()">Sign in securely</button>
+      <div class="login-foot">
+        Protected by 256-bit encryption &middot; POPIA compliant<br>
+        <a href="#">Request prescriber access</a> &middot; <a href="#">Forgot password</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app">
+  <header class="topbar">
+    <div class="brandmark">
+      <span class="glyph" style="background:var(--teal)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M5 8l7-5 7 5M7 21h10"/></svg>
+      </span>
+      VITRUM<span style="font-weight:400;color:var(--muted)">&nbsp;Prescriber Portal</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <button class="icon-btn" aria-label="Notifications" onclick="toast('3 unread notifications')">
+      <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M18 9a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8M13.7 20a2 2 0 0 1-3.4 0"/></svg>
+      <span class="badge-dot"></span>
+    </button>
+    <button class="userchip" onclick="toast('Profile & practice settings')">
+      <span class="avatar" id="uAvatar">AJ</span>
+      <span>
+        <span class="u-name" id="uName">Dr. A. Jansen, M.B.Ch.B</span><br>
+        <span class="u-role" id="uRole">Prescriber · Morningside Medical Centre</span>
+      </span>
+    </button>
+    <button class="btn btn-quiet" onclick="logout()" style="font-size:13px">Sign out</button>
+  </header>
+
+  <nav class="sidebar">
+    <div class="nav-label">Workspace</div>
+    <button class="nav-item active" data-nav="dashboard" onclick="go('dashboard')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" data-nav="catalog" onclick="go('catalog')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4h6v16H5zM13 4h6v16h-6z"/><path d="M8 8h0M16 8h0"/></svg>
+      Product Catalog
+    </button>
+    <button class="nav-item" data-nav="order" onclick="go('order')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+      New Order
+    </button>
+    <button class="nav-item" data-nav="resources" onclick="go('resources')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 19V5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2zM19 17H6a2 2 0 0 0-2 2"/></svg>
+      Prescribing Resources
+    </button>
+    <button class="nav-item" data-nav="history" onclick="toast('Order History — full archive view (mock)')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Order History
+    </button>
+    <div class="sidebar-foot">
+      VITRUM COMPOUNDING (PTY) LTD<br>
+      RESPONSIBLE PHARMACIST<br>
+      M. NAIDOO · P-44812<br><br>
+      PORTAL v2.4 · DEMO BUILD
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- ================= PAGE 2: DASHBOARD ================= -->
+    <section class="view active" id="view-dashboard">
+      <div class="page-head">
+        <div>
+          <div class="crumb">Workspace / Overview</div>
+          <h2 id="dashGreeting">Good morning, Dr. Jansen</h2>
+        </div>
+        <span class="status ok"><span class="dot"></span>Account verified · HPCSA MP 0712345</span>
+      </div>
+
+      <div class="stat-grid">
+        <div class="card stat">
+          <div class="s-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4a2 2 0 0 0 1-1.7zM3.3 7l8.7 5 8.7-5M12 22V12"/></svg></div>
+          <div class="s-label">Active Orders</div>
+          <div class="s-num">7</div>
+          <div class="s-meta"><b>3 in synthesis</b> · 2 in QC release</div>
+        </div>
+        <div class="card stat">
+          <div class="s-ico" style="background:var(--warn-bg);color:var(--warn)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg></div>
+          <div class="s-label">Pending Signatures</div>
+          <div class="s-num">2</div>
+          <div class="s-meta">Routed by practice staff · oldest 4h ago</div>
+        </div>
+        <div class="card stat">
+          <div class="s-ico" style="background:var(--ok-bg);color:var(--ok)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4 12 14l-3-3"/></svg></div>
+          <div class="s-label">Completed Compounds</div>
+          <div class="s-num">126</div>
+          <div class="s-meta"><b>+14</b> this month · 0 batch deviations</div>
+        </div>
+      </div>
+
+      <div class="action-grid">
+        <div class="card action-card primary">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" style="flex:0 0 34px"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>
+          <div>
+            <div class="ac-title">Place New Patient Order</div>
+            <div class="ac-sub">Start a patient-specific compound order with script upload and digital sign-off.</div>
+          </div>
+          <button class="btn" onclick="go('order')">Start order</button>
+        </div>
+        <div class="card action-card">
+          <div>
+            <div class="ac-title">Browse S4–S6 Catalog</div>
+            <div class="ac-sub">38 made-to-order formulations across 5 clinical categories.</div>
+          </div>
+          <button class="btn btn-ghost" onclick="go('catalog')">Open catalog</button>
+        </div>
+      </div>
+
+      <div class="card table-card">
+        <div class="table-head">
+          <h3>Recent Activity</h3>
+          <button class="btn btn-quiet" style="font-size:13px" onclick="toast('Order History — full archive view (mock)')">View all orders →</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Order Ref</th><th>Patient</th><th>Compound</th><th>Schedule</th><th>Status</th><th>Updated</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="font-size:12.5px">VTM-26-0941</td>
+              <td>N.M.<div class="t-sub">ID ····6082</div></td>
+              <td>Bio-Identical Progesterone Cream<div class="t-sub">50 mg/ml · 60 ml</div></td>
+              <td><span class="chip s5">S5</span></td>
+              <td><span class="status warn"><span class="dot"></span>Awaiting Doctor Signature</span></td>
+              <td class="t-sub" style="font-size:12px;color:var(--muted)">Today, 09:42</td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12.5px">VTM-26-0938</td>
+              <td>P.v.R.<div class="t-sub">ID ····3317</div></td>
+              <td>Ketamine 10% Transdermal Gel<div class="t-sub">PLO base · 100 g</div></td>
+              <td><span class="chip s6">S6</span></td>
+              <td><span class="status info"><span class="dot"></span>In Synthesis</span></td>
+              <td class="t-sub" style="font-size:12px;color:var(--muted)">Today, 08:15</td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12.5px">VTM-26-0934</td>
+              <td>T.K.<div class="t-sub">ID ····9920</div></td>
+              <td>Low-Dose Naltrexone Capsules<div class="t-sub">4.5 mg · 90 caps</div></td>
+              <td><span class="chip s5">S5</span></td>
+              <td><span class="status neutral"><span class="dot"></span>QC Release</span></td>
+              <td class="t-sub" style="font-size:12px;color:var(--muted)">Yesterday, 16:30</td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12.5px">VTM-26-0929</td>
+              <td>S.D.<div class="t-sub">ID ····1145</div></td>
+              <td>Paediatric Omeprazole Suspension<div class="t-sub">2 mg/ml · 150 ml</div></td>
+              <td><span class="chip s4">S4</span></td>
+              <td><span class="status ok"><span class="dot"></span>Shipped</span></td>
+              <td class="t-sub" style="font-size:12px;color:var(--muted)">Yesterday, 11:02</td>
+            </tr>
+            <tr>
+              <td class="mono" style="font-size:12.5px">VTM-26-0921</td>
+              <td>L.B.<div class="t-sub">ID ····7754</div></td>
+              <td>Testosterone 2% Topical Cream<div class="t-sub">Lipoderm base · 50 g</div></td>
+              <td><span class="chip s6">S6</span></td>
+              <td><span class="status ok"><span class="dot"></span>Shipped</span></td>
+              <td class="t-sub" style="font-size:12px;color:var(--muted)">Mon, 14:48</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 3: CATALOG ================= -->
+    <section class="view" id="view-catalog">
+      <div class="page-head">
+        <div>
+          <div class="crumb">Workspace / Product Catalog</div>
+          <h2>Made-to-Order Catalog · S4–S6</h2>
+        </div>
+        <span class="status neutral">All items compounded per individual prescription</span>
+      </div>
+
+      <div class="searchbar">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="catSearch" type="text" placeholder="Search by compound, active ingredient, or base formulation…" oninput="filterCatalog()">
+        <span class="mono" style="font-size:11px;color:var(--muted)" id="catCount">8 of 38 shown</span>
+      </div>
+
+      <div class="catalog-layout">
+        <aside class="card filter-card">
+          <h4>Category</h4>
+          <label class="f-opt"><input type="checkbox" class="f-cat" value="Endocrinology" checked onchange="filterCatalog()">Endocrinology<span class="count">11</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-cat" value="Pain Management" checked onchange="filterCatalog()">Pain Management<span class="count">9</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-cat" value="Dermatology" checked onchange="filterCatalog()">Dermatology<span class="count">8</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-cat" value="Paediatrics" checked onchange="filterCatalog()">Paediatrics<span class="count">6</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-cat" value="Psychiatry" checked onchange="filterCatalog()">Psychiatry<span class="count">4</span></label>
+          <h4>Schedule</h4>
+          <label class="f-opt"><input type="checkbox" class="f-sch" value="S4" checked onchange="filterCatalog()"><span class="chip s4">S4</span><span class="count">14</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-sch" value="S5" checked onchange="filterCatalog()"><span class="chip s5">S5</span><span class="count">16</span></label>
+          <label class="f-opt"><input type="checkbox" class="f-sch" value="S6" checked onchange="filterCatalog()"><span class="chip s6">S6</span><span class="count">8</span></label>
+          <h4>Dosage Form</h4>
+          <label class="f-opt"><input type="checkbox" checked>Topical / Transdermal</label>
+          <label class="f-opt"><input type="checkbox" checked>Capsules</label>
+          <label class="f-opt"><input type="checkbox" checked>Oral Suspension</label>
+          <label class="f-opt"><input type="checkbox" checked>Troches / Lozenges</label>
+        </aside>
+
+        <div class="prod-grid" id="prodGrid"></div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 4: ORDER WIZARD ================= -->
+    <section class="view" id="view-order">
+      <div class="page-head">
+        <div>
+          <div class="crumb">Workspace / New Order</div>
+          <h2>Patient-Specific Order</h2>
+        </div>
+        <span class="status info" id="orderRoleBadge"><span class="dot"></span>Signing as prescriber</span>
+      </div>
+
+      <div class="wizard">
+        <div class="steps">
+          <div class="step on" id="stepTab1"><span class="s-n">1</span>Patient Information</div>
+          <div class="step" id="stepTab2"><span class="s-n">2</span>Prescription &amp; Upload</div>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="card" id="step1">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="pName">Patient Full Name</label>
+              <input id="pName" type="text" placeholder="As per ID document" value="Nomvula Mokoena">
+            </div>
+            <div class="field">
+              <label for="pId">SA ID / Passport Number</label>
+              <input id="pId" type="text" class="mono" value="8205146082083">
+              <div class="hint">Required for S5/S6 dispensing records.</div>
+            </div>
+            <div class="field">
+              <label for="pDob">Date of Birth</label>
+              <input id="pDob" type="date" value="1982-05-14">
+            </div>
+            <div class="field">
+              <label for="pPhone">Contact Number</label>
+              <input id="pPhone" type="tel" value="082 446 1907">
+            </div>
+            <div class="field">
+              <label for="pAid">Medical Aid (optional)</label>
+              <input id="pAid" type="text" placeholder="Scheme & member no." value="Discovery · 884 220 117">
+            </div>
+          </div>
+          <div class="wiz-foot">
+            <span style="font-size:12px;color:var(--muted)">Patient data is processed under POPIA. Stored encrypted at rest.</span>
+            <button class="btn btn-primary" onclick="wizStep(2)">Continue to prescription →</button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="card" id="step2" style="display:none">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="compoundSel">Compound Product</label>
+              <select id="compoundSel">
+                <option>Bio-Identical Progesterone Cream 50 mg/ml — Versatile™ base [S5]</option>
+                <option selected>Custom Bio-Identical Hormone Cream 50 mg/ml — Lipoderm® base [S5]</option>
+                <option>Ketamine 10% Transdermal Gel — PLO base [S6]</option>
+                <option>Low-Dose Naltrexone 4.5 mg Capsules — Microcrystalline cellulose [S5]</option>
+                <option>Paediatric Omeprazole Suspension 2 mg/ml — SyrSpend® SF [S4]</option>
+                <option>Testosterone 2% Topical Cream — Lipoderm® base [S6]</option>
+              </select>
+            </div>
+            <div class="field full">
+              <label for="notes">Custom Instructions / Compounding Notes</label>
+              <textarea id="notes" rows="3" placeholder="Strength adjustments, excipient allergies, flavouring, titration schedule…">Patient allergic to soy-derived excipients. Dispense with 1 ml graduated topical syringe. Apply 0.5 ml nocte to inner forearm.</textarea>
+            </div>
+            <div class="field full">
+              <label>Prescription Upload (PDF, max 10 MB)</label>
+              <div class="dropzone" id="dz" onclick="mockUpload()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="event.preventDefault();this.classList.remove('over');mockUpload()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" style="opacity:.6"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                <div class="dz-title">Drag &amp; drop the signed script here</div>
+                <div class="dz-sub">or click to browse · original hard copy to follow by courier for S6 items</div>
+              </div>
+              <div class="filepill" id="filePill" style="display:none">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"/></svg>
+                script_mokoena_n_2026-06-11.pdf · 1.2 MB · uploaded
+              </div>
+            </div>
+
+            <!-- Doctor-only block -->
+            <div class="field full" id="doctorBlock">
+              <label>Digital Signature Capture</label>
+              <div class="sig-box">
+                <canvas id="sigPad" width="700" height="140"></canvas>
+                <div class="sig-hint" id="sigHint">Sign here with mouse or trackpad</div>
+              </div>
+              <div class="sig-meta">
+                <span>SIGNATORY: DR. A. JANSEN · HPCSA MP 0712345</span>
+                <button class="btn btn-quiet" style="font-size:12px;padding:2px 6px" onclick="clearSig()">Clear</button>
+              </div>
+            </div>
+
+            <!-- Staff-only block -->
+            <div class="field full routebox" id="staffBlock" style="display:none">
+              <div class="rb-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>
+                Prescriber sign-off required
+              </div>
+              <p>You are signed in as practice staff. This order will be saved as a draft and routed to <b>Dr. A. Jansen</b> for digital signature before it enters the compounding queue.</p>
+              <button class="btn btn-primary" onclick="submitOrder('routed')">Save &amp; Route to Doctor for Signature</button>
+            </div>
+          </div>
+
+          <div class="wiz-foot">
+            <button class="btn btn-ghost" onclick="wizStep(1)">← Back to patient details</button>
+            <button class="btn btn-primary" id="doctorSubmit" onclick="submitOrder('submitted')">Confirm &amp; Submit Order</button>
+          </div>
+          <div class="pay-note">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex:0 0 15px;margin-top:2px"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/></svg>
+            No payment is taken in this portal. Payment terms are applied directly via your practice account terms or offline bank transfer (EFT). A pro forma invoice accompanies QC release.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 5: RESOURCES ================= -->
+    <section class="view" id="view-resources">
+      <div class="page-head">
+        <div>
+          <div class="crumb">Workspace / Prescribing Resources</div>
+          <h2>Prescribing Resources Hub</h2>
+        </div>
+        <span class="status neutral">Reviewed by the responsible pharmacist · Last updated 02 Jun 2026</span>
+      </div>
+
+      <div class="res-grid">
+        <div class="card res">
+          <div class="r-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01M8 19h.01M12 19h.01M16 19h.01"/></svg></div>
+          <h3>Interactive Dosage &amp; Formulation Calculators</h3>
+          <p>Weight-based adjustments and concentration conversions for non-standard formulations.</p>
+          <ul class="r-items">
+            <li>Paediatric mg/kg dose adjuster<span class="tag">TOOL</span></li>
+            <li>Geriatric renal-adjusted dosing (Cockcroft-Gault)<span class="tag">TOOL</span></li>
+            <li>Cream/gel concentration converter (% ↔ mg/ml)<span class="tag">TOOL</span></li>
+          </ul>
+          <button class="btn btn-ghost" onclick="toast('Calculator suite opens here (mock)')">Open calculators</button>
+        </div>
+
+        <div class="card res">
+          <div class="r-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15h6M9 11h2"/></svg></div>
+          <h3>Clinical Monographs &amp; Stability Data</h3>
+          <p>Downloadable PDFs supporting S4–S6 compliance, beyond-use dating, and storage conditions.</p>
+          <ul class="r-items">
+            <li>Progesterone 50 mg/ml cream — monograph<span class="tag">PDF · 1.4 MB</span></li>
+            <li>Ketamine 10% PLO gel — stability summary<span class="tag">PDF · 0.9 MB</span></li>
+            <li>SyrSpend® SF suspensions — BUD tables<span class="tag">PDF · 2.1 MB</span></li>
+          </ul>
+          <button class="btn btn-ghost" onclick="toast('Monograph library opens here (mock)')">Browse library · 64 documents</button>
+        </div>
+
+        <div class="card res">
+          <div class="r-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M9 12l2 2 4-4"/><path d="M12 3l7 4v5c0 4.5-3 8.5-7 9.5C8 20.5 5 16.5 5 12V7z"/></svg></div>
+          <h3>Authorised Prescriber Pathways &amp; Guidelines</h3>
+          <p>Step-by-step documentation for South African regulatory frameworks governing compounded medicines.</p>
+          <ul class="r-items">
+            <li>Section 21 application — annotated walkthrough<span class="tag">GUIDE</span></li>
+            <li>S6 script &amp; record-keeping requirements<span class="tag">GUIDE</span></li>
+            <li>SAHPRA compounding vs. manufacturing — scope note<span class="tag">GUIDE</span></li>
+          </ul>
+          <button class="btn btn-ghost" onclick="toast('Regulatory pathways open here (mock)')">View pathways</button>
+        </div>
+
+        <div class="card res">
+          <div class="r-ico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></div>
+          <h3>Compounding Compatibility Charts</h3>
+          <p>Quick-reference visual grids for mixing actives with topical, oral, and suspension bases.</p>
+          <ul class="r-items">
+            <li>Topical bases × hormone actives matrix<span class="tag">CHART</span></li>
+            <li>Suspension vehicles × paediatric actives<span class="tag">CHART</span></li>
+            <li>Excipient allergen cross-reference<span class="tag">CHART</span></li>
+          </ul>
+          <button class="btn btn-ghost" onclick="toast('Compatibility charts open here (mock)')">Open charts</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- state ---------- */
+let role = 'doctor';
+
+/* ---------- login / role ---------- */
+function setRole(r){
+  role = r;
+  document.getElementById('roleDoctor').classList.toggle('active', r==='doctor');
+  document.getElementById('roleStaff').classList.toggle('active', r==='staff');
+  document.getElementById('roleDoctor').setAttribute('aria-selected', r==='doctor');
+  document.getElementById('roleStaff').setAttribute('aria-selected', r==='staff');
+  document.getElementById('hpcsaField').style.display = r==='doctor' ? '' : 'none';
+  document.getElementById('practiceField').style.display = r==='staff' ? '' : 'none';
+  document.getElementById('email').value = r==='doctor' ? 'a.jansen@morningside-med.co.za' : 'reception@morningside-med.co.za';
+}
+
+function login(){
+  document.getElementById('view-login').classList.remove('active');
+  document.getElementById('app').classList.add('active');
+  if(role==='doctor'){
+    document.getElementById('uAvatar').textContent='AJ';
+    document.getElementById('uName').textContent='Dr. A. Jansen, M.B.Ch.B';
+    document.getElementById('uRole').textContent='Prescriber · Morningside Medical Centre';
+    document.getElementById('dashGreeting').textContent='Good morning, Dr. Jansen';
+  }else{
+    document.getElementById('uAvatar').textContent='LP';
+    document.getElementById('uName').textContent='Lerato Phiri';
+    document.getElementById('uRole').textContent='Practice Assistant · Morningside Medical Centre';
+    document.getElementById('dashGreeting').textContent='Good morning, Lerato';
+  }
+  applyRoleToOrder();
+  go('dashboard');
+}
+
+function logout(){
+  document.getElementById('app').classList.remove('active');
+  document.getElementById('view-login').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ---------- navigation ---------- */
+function go(page){
+  document.querySelectorAll('.main .view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active', n.dataset.nav===page));
+  if(page==='order'){ wizStep(1); applyRoleToOrder(); }
+  if(page==='catalog'){ renderCatalog(); }
+  window.scrollTo(0,0);
+}
+
+/* ---------- catalog ---------- */
+const PRODUCTS = [
+  {name:'Custom Bio-Identical Hormone Cream 50 mg/ml', base:'Lipoderm® transdermal base · 30/60 ml pump', sch:'S5', cat:'Endocrinology'},
+  {name:'Bio-Identical Progesterone Cream 50 mg/ml', base:'Versatile™ cream base · 60 ml graduated pump', sch:'S5', cat:'Endocrinology'},
+  {name:'Testosterone 2% Topical Cream', base:'Lipoderm® base · 50 g airless dispenser', sch:'S6', cat:'Endocrinology'},
+  {name:'Ketamine 10% Transdermal Gel', base:'PLO (pluronic lecithin organogel) · 100 g', sch:'S6', cat:'Pain Management'},
+  {name:'Amitriptyline 2% / Lidocaine 5% Topical Gel', base:'PLO base · 50 g · neuropathic pain', sch:'S5', cat:'Pain Management'},
+  {name:'Low-Dose Naltrexone 4.5 mg Capsules', base:'Microcrystalline cellulose filler · 30/90 caps', sch:'S5', cat:'Pain Management'},
+  {name:'Paediatric Omeprazole Suspension 2 mg/ml', base:'SyrSpend® SF Alka vehicle · 150 ml', sch:'S4', cat:'Paediatrics'},
+  {name:'Tacrolimus 0.1% Topical Ointment', base:'White soft paraffin base · 30 g', sch:'S4', cat:'Dermatology'},
+];
+
+function renderCatalog(){
+  const grid = document.getElementById('prodGrid');
+  grid.innerHTML = PRODUCTS.map(p=>`
+    <div class="card prod" data-cat="${p.cat}" data-sch="${p.sch}" data-name="${p.name.toLowerCase()} ${p.base.toLowerCase()}">
+      <div class="p-top">
+        <div class="p-name">${p.name}</div>
+        <span class="chip ${p.sch.toLowerCase()}">${p.sch}</span>
+      </div>
+      <div class="p-base"><b>Base:</b> ${p.base}</div>
+      <div class="p-foot">
+        <span class="p-cat">${p.cat}</span>
+        <button class="btn btn-primary" onclick="selectProduct('${p.name.replace(/'/g,"\\'")}')">Select for Patient Order</button>
+      </div>
+    </div>`).join('');
+  filterCatalog();
+}
+
+function filterCatalog(){
+  const q = (document.getElementById('catSearch').value||'').toLowerCase();
+  const cats = [...document.querySelectorAll('.f-cat:checked')].map(c=>c.value);
+  const schs = [...document.querySelectorAll('.f-sch:checked')].map(c=>c.value);
+  let shown = 0;
+  document.querySelectorAll('#prodGrid .prod').forEach(p=>{
+    const ok = cats.includes(p.dataset.cat) && schs.includes(p.dataset.sch) && p.dataset.name.includes(q);
+    p.style.display = ok ? '' : 'none';
+    if(ok) shown++;
+  });
+  document.getElementById('catCount').textContent = `${shown} of 38 shown`;
+}
+
+function selectProduct(name){
+  go('order');
+  toast(`${name} pre-selected for this order`);
+}
+
+/* ---------- order wizard ---------- */
+function wizStep(n){
+  document.getElementById('step1').style.display = n===1 ? '' : 'none';
+  document.getElementById('step2').style.display = n===2 ? '' : 'none';
+  document.getElementById('stepTab1').className = 'step ' + (n===1 ? 'on' : 'done');
+  document.getElementById('stepTab2').className = 'step ' + (n===2 ? 'on' : '');
+  window.scrollTo(0,0);
+}
+
+function applyRoleToOrder(){
+  const isDoc = role==='doctor';
+  document.getElementById('doctorBlock').style.display = isDoc ? '' : 'none';
+  document.getElementById('doctorSubmit').style.display = isDoc ? '' : 'none';
+  document.getElementById('staffBlock').style.display = isDoc ? 'none' : '';
+  const b = document.getElementById('orderRoleBadge');
+  b.className = 'status ' + (isDoc ? 'info' : 'warn');
+  b.innerHTML = '<span class="dot"></span>' + (isDoc ? 'Signing as prescriber' : 'Staff draft · routes for signature');
+}
+
+function mockUpload(){
+  document.getElementById('filePill').style.display='flex';
+  toast('Script uploaded and attached to order');
+}
+
+function submitOrder(kind){
+  if(kind==='submitted'){
+    toast('Order VTM-26-0944 submitted · entering compounding queue');
+  }else{
+    toast('Draft saved · routed to Dr. A. Jansen for signature');
+  }
+  setTimeout(()=>go('dashboard'), 1400);
+}
+
+/* ---------- signature pad ---------- */
+const sig = document.getElementById('sigPad');
+const ctx = sig.getContext('2d');
+ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#0B1C2C';
+let drawing = false;
+function sigPos(e){
+  const r = sig.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+  return {x: x * (sig.width/r.width), y: y * (sig.height/r.height)};
+}
+sig.addEventListener('pointerdown', e=>{drawing=true; const p=sigPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); document.getElementById('sigHint').style.display='none';});
+sig.addEventListener('pointermove', e=>{if(!drawing)return; const p=sigPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();});
+window.addEventListener('pointerup', ()=>drawing=false);
+function clearSig(){ctx.clearRect(0,0,sig.width,sig.height); document.getElementById('sigHint').style.display='flex';}
+
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+renderCatalog();
+</script>
+</body>
+</html>
